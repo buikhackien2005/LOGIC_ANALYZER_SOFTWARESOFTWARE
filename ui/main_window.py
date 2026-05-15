@@ -1,3 +1,4 @@
+from ui.stats_dialog import StatsDialog
 from PyQt5.QtWidgets import QFileDialog, QMessageBox # Thêm thư viện hộp thoại
 from utils.data_exporter import VCDExporter          # Import thuật toán xuất file bạn vừa viết
 import numpy as np
@@ -92,6 +93,23 @@ class MainWindow(QMainWindow):
         """)
         self.btn_export.clicked.connect(self.export_vcd_action)
         self.left_layout.addWidget(self.btn_export)
+
+        # --- THÊM NÚT BẤM THỐNG KÊ VÀO ĐÂY ---
+        self.btn_stats = QPushButton("ANALYZE: Statistical Report")
+        self.btn_stats.setStyleSheet("""
+            QPushButton {
+                padding: 10px; 
+                background-color: #8E44AD; /* Màu tím Data Science */
+                color: white; 
+                font-weight: bold; 
+                border-radius: 4px;
+                margin-bottom: 10px;
+            }
+            QPushButton:hover { background-color: #732D91; }
+        """)
+        self.btn_stats.clicked.connect(self.show_statistics_action)
+        self.left_layout.addWidget(self.btn_stats)
+        # ------------------------------------
         
         # Biến lưu trữ dữ liệu tạm để chờ xuất file
         self.current_buffer = None
@@ -174,6 +192,7 @@ class MainWindow(QMainWindow):
                 print(f"Lỗi giải mã: {e}")
                 
         all_transactions.sort(key=lambda x: x.get('time_val', 0) if x.get('time_val') is not None else 0)
+        self.current_transactions = all_transactions
         self.transaction_log.update_logs(all_transactions)
 
     def update_status_log(self, msg):
@@ -229,3 +248,14 @@ class MainWindow(QMainWindow):
                 QMessageBox.information(self, "Thành công", f"Đã lưu thành công file:\n{file_path}")
             except Exception as e:
                 QMessageBox.critical(self, "Lỗi", f"Không thể ghi file: {str(e)}")
+    
+    def show_statistics_action(self):
+        """Mở popup báo cáo thống kê."""
+        if not hasattr(self, 'current_transactions') or not self.current_transactions:
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Lỗi", "Chưa có dữ liệu giải mã để phân tích!")
+            return
+            
+        # Mở cửa sổ dạng modal (buộc người dùng phải đóng mới tương tác tiếp được)
+        dialog = StatsDialog(self.current_transactions, self)
+        dialog.exec_()
