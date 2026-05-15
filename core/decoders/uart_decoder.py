@@ -3,8 +3,13 @@ from .base_decoder import ProtocolDecoder
 
 class UARTDecoder(ProtocolDecoder):
     def __init__(self, tx_channel, baud_rate=9600):
-        self.tx_channel = tx_channel
-        self.baud_rate = baud_rate
+        # Chống lỗi nếu giao diện truyền vào chuỗi "CH1" thay vì số nguyên 1
+        if isinstance(tx_channel, str):
+            self.tx_channel = int(tx_channel.replace('CH', '').strip())
+        else:
+            self.tx_channel = int(tx_channel)
+            
+        self.baud_rate = int(baud_rate)
 
     def decode(self, sample_rate, buffer_array):
         transactions = []
@@ -13,8 +18,9 @@ class UARTDecoder(ProtocolDecoder):
         # 1. Trích xuất riêng kênh TX
         tx_data = (buffer_array >> self.tx_channel) & 1
         
-        # 2. Tìm sườn xuống (Start bit candidate)
-        falling_edges = np.where(np.diff(tx_data) == -1)[0]
+        # 2. ÉP KIỂU SANG INT8 ĐỂ SỬA LỖI UNDERFLOW TOÁN HỌC
+        diff = np.diff(tx_data.astype(np.int8))
+        falling_edges = np.where(diff == -1)[0]
         
         skip_until = 0
         for edge_idx in falling_edges:
@@ -31,16 +37,18 @@ class UARTDecoder(ProtocolDecoder):
             byte_value = 0
             for bit_pos in range(8):
                 sample_idx = int(edge_idx + (spb / 2) + ((bit_pos + 1) * spb))
-                byte_value |= (tx_data[sample_idx] << bit_pos)
+                if sample_idx < len(tx_data):
+                    byte_value |= (tx_data[sample_idx] << bit_pos)
 
             stop_idx = int(edge_idx + (spb / 2) + (9 * spb))
-            if tx_data[stop_idx] == 1:
+            if stop_idx < len(tx_data) and tx_data[stop_idx] == 1:
                 # --- ĐÓNG GÓI CHUẨN ĐẦU RA CHO UI ---
                 time_sec = edge_idx / sample_rate
                 char_val = chr(byte_value) if 32 <= byte_value <= 126 else '?'
                 data_str = f"0x{byte_value:02X} ('{char_val}')"
                 
                 transactions.append({
+                    'time_val': time_sec, # BẮT BUỘC PHẢI CÓ KEY NÀY ĐỂ ĐỒNG BỘ LOG
                     'time': f"{time_sec:.5f}s",
                     'protocol': 'UART',
                     'channel': f"CH{self.tx_channel}",

@@ -31,7 +31,8 @@ class ControlPanel(QWidget):
         # 1.1 Chọn giao thức
         self.combo_protocol = QComboBox()
         self.combo_protocol.addItems(["UART", "I2C", "SPI"])
-        self.combo_protocol.setStyleSheet("background-color: #333; padding: 5px;")
+        # SỬA: Nền trắng, viền xám cho dễ nhìn với chữ đen
+        self.combo_protocol.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CCC; padding: 5px;")
         self.combo_protocol.currentIndexChanged.connect(self.change_config_page)
         add_layout.addWidget(QLabel("Protocol:"))
         add_layout.addWidget(self.combo_protocol)
@@ -45,7 +46,8 @@ class ControlPanel(QWidget):
 
         # 1.3 Nút Add
         self.btn_add = QPushButton("ADD TO PIPELINE")
-        self.btn_add.setStyleSheet("background-color: #007ACC; padding: 8px; font-weight: bold;")
+        # SỬA: Thêm color: white để chữ nổi trên nền xanh dương
+        self.btn_add.setStyleSheet("background-color: #007ACC; color: white; padding: 8px; font-weight: bold;")
         self.btn_add.clicked.connect(self.emit_decoder_config)
         add_layout.addWidget(self.btn_add)
 
@@ -57,11 +59,13 @@ class ControlPanel(QWidget):
         list_layout = QVBoxLayout(group_list)
         
         self.list_active = QListWidget()
-        self.list_active.setStyleSheet("background-color: #1E1E1E; border: none;")
+        # SỬA: Nền trắng, viền xám để đọc được chữ đen
+        self.list_active.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CCC;")
         list_layout.addWidget(self.list_active)
 
         self.btn_clear = QPushButton("Clear All Decoders")
-        self.btn_clear.setStyleSheet("background-color: #B71C1C; padding: 5px;")
+        # SỬA: Thêm color: white để chữ nổi trên nền đỏ
+        self.btn_clear.setStyleSheet("background-color: #B71C1C; color: white; padding: 5px;")
         # Sẽ kết nối sự kiện xóa sau
         list_layout.addWidget(self.btn_clear)
 
@@ -72,7 +76,8 @@ class ControlPanel(QWidget):
     def get_channel_combo(self):
         cb = QComboBox()
         cb.addItems([f"CH{i}" for i in range(8)])
-        cb.setStyleSheet("background-color: #333;")
+        # SỬA: Nền trắng, viền xám
+        cb.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CCC;")
         return cb
 
     def setup_uart_page(self):
@@ -81,7 +86,8 @@ class ControlPanel(QWidget):
         self.uart_tx = self.get_channel_combo()
         self.uart_tx.setCurrentIndex(1) # Mặc định CH1
         self.uart_baud = QLineEdit("9600")
-        self.uart_baud.setStyleSheet("background-color: #333; padding: 2px;")
+        # SỬA: Nền trắng, viền xám
+        self.uart_baud.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CCC; padding: 2px;")
         lay.addRow("TX Channel:", self.uart_tx)
         lay.addRow("Baudrate:", self.uart_baud)
         self.stacked_config.addWidget(page)
